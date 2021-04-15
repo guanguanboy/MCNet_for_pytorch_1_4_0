@@ -12,8 +12,8 @@ from eval import PSNR, SSIM, SAM
                    
 def main():
 
-    input_path = '/media/hdisk/liqiang/hyperSR/test/' + opt.datasetName + '/' + str(opt.upscale_factor) + '/' 
-    out_path = '/media/hdisk/liqiang/hyperSR/result/' +  opt.datasetName + '/' + str(opt.upscale_factor) + '/' 
+    input_path = '/mnt/liguanlin/DataSets/hypserdatasets/CAVE/test/2/'
+    out_path = '/mnt/liguanlin/DataSets/hypserdatasets/CAVE/result/2/'
     
     PSNRs = []
     SSIMs = []
@@ -28,7 +28,8 @@ def main():
         if not torch.cuda.is_available():
             raise Exception("No GPU found or Wrong gpu id, please run without --cuda")
 
-    model = SSRNet(opt)
+    model = MCNet(opt)
+    model.eval()
 
     if opt.cuda:
         model = nn.DataParallel(model).cuda()    
@@ -45,14 +46,15 @@ def main():
         input = Variable(torch.from_numpy(hyperLR).float(), volatile=True).contiguous().view(1, -1, hyperLR.shape[1], hyperLR.shape[2])    
         if opt.cuda:
            input = input.cuda()                
-        output = model(input)  
+        with torch.no_grad(): #加上这一句，否则会出现gpu内存不足的提示
+            output = model(input)  
         HR = mat['HR'].transpose(2,0,1).astype(np.float32)        
         SR = output.cpu().data[0].numpy().astype(np.float32)          
         SR[SR<0] = 0             
         SR[SR>1.] = 1.
         psnr = PSNR(SR, HR)
         ssim = SSIM(SR, HR)
-        sam = SAM(SR, HR)
+        sam = SAM(SR, HR)   
         
         PSNRs.append(psnr)
         SSIMs.append(ssim)
