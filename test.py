@@ -52,6 +52,8 @@ def main():
         SR = output.cpu().data[0].numpy().astype(np.float32)          
         SR[SR<0] = 0             
         SR[SR>1.] = 1.
+        print('SR.shape:', SR.shape)
+        print('HR.shape:', HR.shape)
         psnr = PSNR(SR, HR)
         ssim = SSIM(SR, HR)
         sam = SAM(SR, HR)   
